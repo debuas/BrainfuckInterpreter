@@ -5,15 +5,15 @@ interface VirtualMachineInterface {
 
     fun movePointerLeft()
 
-    fun movePointerRight();
+    fun movePointerRight()
 
-    fun incrementPointer();
+    fun incrementPointer()
 
-    fun decrementPointer();
+    fun decrementPointer()
 
-    fun printChar();
+    fun printChar()
 
-    fun readChar();
+    fun readChar()
 
     fun loop()
 
