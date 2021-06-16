@@ -1,22 +1,31 @@
 package virtualmachine
 
+import virtualmachine.util.DataNode
+
 class Virtualmachine : VirtualMachineInterface {
 
+    private var currentNode = DataNode()
 
 
-    override fun movePointerLeft() {
+    init {
+
+    }
+
+
+
+    override fun movePointerLeft(x : Int) {
         //TODO("Not yet implemented")
     }
 
-    override fun movePointerRight() {
+    override fun movePointerRight(x : Int) {
         //TODO("Not yet implemented")
     }
 
-    override fun incrementPointer() {
+    override fun incrementPointer(x : Int) {
         //TODO("Not yet implemented")
     }
 
-    override fun decrementPointer() {
+    override fun decrementPointer(x : Int) {
         //TODO("Not yet implemented")
     }
 
@@ -30,5 +39,10 @@ class Virtualmachine : VirtualMachineInterface {
 
     override fun loop() {
         //TODO("Not yet implemented")
+    }
+
+    override fun getValue(): Int {
+        //TODO("Not yet implemented")
+        return 1
     }
 }

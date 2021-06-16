@@ -1,21 +1,24 @@
 package virtualmachine
 
 interface VirtualMachineInterface {
+    
+    fun movePointerLeft(x : Int = 1)
 
+    fun movePointerRight(x : Int = 1)
 
-    fun movePointerLeft()
+    fun incrementPointer(x : Int = 1)
 
-    fun movePointerRight()
-
-    fun incrementPointer()
-
-    fun decrementPointer()
+    fun decrementPointer(x : Int = 1)
 
     fun printChar()
 
     fun readChar()
 
     fun loop()
+
+    fun getValue() : Int?
+
+
 
 
 
