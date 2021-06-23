@@ -14,7 +14,7 @@ interface VirtualMachineInterface {
 
     fun readChar()
 
-    fun loop()
+    fun loop(function : Unit)
 
     fun getValue() : Int?
 
