@@ -8,7 +8,12 @@ class DataNode {
 
     private var data : Int = 0
 
-    public fun getdata() : Int{
+
+    public fun setData(x : Int = 0) {
+        data = x
+    }
+
+    public fun getData() : Int{
         return data
     }
 
@@ -22,9 +27,9 @@ class DataNode {
     public fun setLeft(){
         if(Left == null) {
             Left = DataNode()
-            Left
         }
     }
+
     public fun setRight(){
         if(Right == null) {
             Right = DataNode()
@@ -36,6 +41,7 @@ class DataNode {
             Left = x;
         }
     }
+
     public fun addRight(x : DataNode ){
         if(Right == null) {
             Right = x;

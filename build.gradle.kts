@@ -9,10 +9,12 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    maven("https://dl.bintray.com/kotlin/kotlin-eap")
 }
 
 dependencies {
     testImplementation(kotlin("test-junit"))
+    implementation(kotlin("stdlib"))
 }
 
 tasks.test {
