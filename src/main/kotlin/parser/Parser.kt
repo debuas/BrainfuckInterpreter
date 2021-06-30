@@ -1,4 +1,4 @@
-package interpreter
+package parser
 
 sealed class Operation {
     data class ChangeNodeValue(val amount: Int) : Operation()
@@ -8,7 +8,7 @@ sealed class Operation {
     object SetNodeValue : Operation()
 }
 
-class Interpreter {
+class Parser {
 
     fun parseStringToOperationList(rawOperationString: String): List<Operation>? {
         if (!isValidOperationString(rawOperationString)) {
@@ -89,7 +89,7 @@ fun main() {
     val brainfuckProgram = ">+-+--[++[-+-] >>>>>>>>>>>>>>>>>>> + >> ]>><-+[+<+]>-"
     val brainfuckProgram1 = "<<[<++<<<><--+<+<<<]++.++.,<<<>>"
 
-    val operationList = Interpreter().parseStringToOperationList(brainfuckProgram1)
+    val operationList = Parser().parseStringToOperationList(brainfuckProgram1)
     if (operationList == null) {
         println("$brainfuckProgram1 \nis not a valid brainfuck program.")
         println("Check if all loops start with '[' and end with ']'.")
