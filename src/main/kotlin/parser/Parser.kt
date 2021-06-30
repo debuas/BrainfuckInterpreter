@@ -1,4 +1,4 @@
-package interpreter
+package parser
 
 sealed class Operation {
     data class ChangeNodeValue(val amount: Int) : Operation()
@@ -8,7 +8,7 @@ sealed class Operation {
     object SetNodeValue : Operation()
 }
 
-class Interpreter {
+class Parser {
 
     fun parseStringToOperationList(rawOperationString: String): List<Operation>? {
         if (!isValidOperationString(rawOperationString)) {
@@ -33,30 +33,40 @@ class Interpreter {
         return loopLevel == 0
     }
 
+    fun sumSeriesOfRelatedOperations(relatedOperations: Pair<Char, Char>, _startPosition: Int, rawSegmentString: String): Pair<Int, Int> {
+        var stepNumber = 0
+        var position = _startPosition
+
+        var currentChar = rawSegmentString.getOrNull(position)
+        while ((currentChar != null) and ((currentChar == relatedOperations.first) or (currentChar == relatedOperations.second))) {
+            if (currentChar == relatedOperations.first) {
+                stepNumber--
+            } else {
+                stepNumber++
+            }
+
+            currentChar = rawSegmentString.getOrNull(++position)
+        }
+
+        position--
+        return position to stepNumber
+    }
+
     fun parseSegmentToOperationList(_startPosition: Int, rawSegmentString: String): Pair<Int, List<Operation>> {
         val operationList = mutableListOf<Operation>()
-        var stepNumber = 0
 
         var position = _startPosition
         while (position < rawSegmentString.length) {
-            when (val currentChar = rawSegmentString[position]) {
-                '+', '-' -> {
-                    if (currentChar == '+') stepNumber++ else stepNumber--
-
-                    val nextChar = (rawSegmentString.getOrNull(position + 1))
-                    if ((nextChar == null) or (nextChar != '+') and (nextChar != '-')) {
-                        operationList.add(Operation.ChangeNodeValue(stepNumber))
-                        stepNumber = 0
-                    }
+            when (rawSegmentString[position]) {
+                '-', '+' -> {
+                    val result: Pair<Int, Int> = sumSeriesOfRelatedOperations(Pair('-', '+'), position, rawSegmentString)
+                    operationList.add(Operation.ChangeNodeValue(result.second))
+                    position = result.first
                 }
-                '>', '<' -> {
-                    if (currentChar == '>') stepNumber++ else stepNumber--
-
-                    val nextChar = (rawSegmentString.getOrNull(position + 1))
-                    if ((nextChar == null) or (nextChar != '>') and (nextChar != '<')) {
-                        operationList.add(Operation.ChangePosition(stepNumber))
-                        stepNumber = 0
-                    }
+                '<', '>' -> {
+                    val result: Pair<Int, Int> = sumSeriesOfRelatedOperations(Pair('<', '>'), position, rawSegmentString)
+                    operationList.add(Operation.ChangePosition(result.second))
+                    position = result.first
                 }
                 '[' -> {
                     val loopSegment = parseSegmentToOperationList(position + 1, rawSegmentString)
@@ -79,7 +89,7 @@ fun main() {
     val brainfuckProgram = ">+-+--[++[-+-] >>>>>>>>>>>>>>>>>>> + >> ]>><-+[+<+]>-"
     val brainfuckProgram1 = "<<[<++<<<><--+<+<<<]++.++.,<<<>>"
 
-    val operationList = Interpreter().parseStringToOperationList(brainfuckProgram1)
+    val operationList = Parser().parseStringToOperationList(brainfuckProgram1)
     if (operationList == null) {
         println("$brainfuckProgram1 \nis not a valid brainfuck program.")
         println("Check if all loops start with '[' and end with ']'.")
