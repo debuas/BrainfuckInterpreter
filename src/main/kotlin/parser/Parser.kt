@@ -1,24 +1,34 @@
 package parser
 
 sealed class Operation {
-    data class ChangeNodeValue(val amount: Int) : Operation()
-    data class ChangePosition(val steps: Int) : Operation()
-    data class Loop(val operationList: List<Operation>) : Operation()
+    object DecrementNodeValue : Operation()
+    object IncrementNodeValue : Operation()
+    object MovePointerLeft: Operation()
+    object MovePointerRight: Operation()
+    object StartLoop: Operation()
+    object EndLoop: Operation()
     object PrintNodeValue : Operation()
     object SetNodeValue : Operation()
 }
 
+sealed class OptimizedOperation {
+    data class ChangeNodeValue(val amount: Int) : OptimizedOperation()
+    data class ChangePosition(val steps: Int) : OptimizedOperation()
+    data class Loop(val operationList: List<OptimizedOperation>) : OptimizedOperation()
+    object PrintNodeValue : OptimizedOperation()
+    object SetNodeValue : OptimizedOperation()
+}
+
 class Parser {
 
-    fun parseStringToOperationList(rawOperationString: String): List<Operation>? {
-        if (!isValidOperationString(rawOperationString)) {
-            return null
-        }
+    fun parseStringToOperationList(rawOperationString: String): List<OptimizedOperation> {
+        validate(rawOperationString)
 
-        return parseSegmentToOperationList(0, rawOperationString).second
+        val operations: List<Operation> = lexer(rawOperationString)
+        return optimize(0, operations).second
     }
 
-    fun isValidOperationString(rawOperationString: String): Boolean {
+    fun validate(rawOperationString: String) {
         var loopLevel = 0
         val openLoops = mutableListOf<Pair<Int,Int>>()
 
@@ -30,10 +40,10 @@ class Parser {
                 }
                 ']' -> {
                     val closed: Boolean = openLoops.removeIf{ it.second == loopLevel}
-                    loopLevel--
                     if (!closed) {
                         throw Exception("At Position $currentPosition: Tried to close non-existent loop.")
                     }
+                    loopLevel--
                 }
             }
         }
@@ -41,59 +51,84 @@ class Parser {
         if (openLoops.isNotEmpty()) {
             val openLoop = openLoops.first()
             throw Exception("At Position ${openLoop.first}: Loop started with '[' but was never closed.")
-        } else {
-            return true
         }
     }
 
-    fun sumSeriesOfRelatedOperations(relatedOperations: Pair<Char, Char>, _startPosition: Int, rawSegmentString: String): Pair<Int, Int> {
+    fun lexer(rawOperationString: String): List<Operation> {
+        return rawOperationString.fold( listOf<Operation>() ) { operationList, currentChar ->
+            when (currentChar) {
+                '-' -> operationList.plus(Operation.DecrementNodeValue)
+                '+' -> operationList.plus(Operation.IncrementNodeValue)
+                '<' -> operationList.plus(Operation.MovePointerLeft)
+                '>' -> operationList.plus(Operation.MovePointerRight)
+                '[' -> operationList.plus(Operation.StartLoop)
+                ']' -> operationList.plus(Operation.EndLoop)
+                '.' -> operationList.plus(Operation.PrintNodeValue)
+                ';' -> operationList.plus(Operation.SetNodeValue)
+                else -> operationList
+            }
+        }
+    }
+
+    fun optimize(_startPosition: Int, operations: List<Operation>): Pair<Int, List<OptimizedOperation>> {
+        val optimizedOperations = mutableListOf<OptimizedOperation>()
+
+        var position = _startPosition
+        while (position < operations.size) {
+            when (operations[position]) {
+                Operation.DecrementNodeValue, Operation.IncrementNodeValue -> {
+                    val result: Pair<Int, Int> =
+                        combineOperations(
+                            Pair(Operation.DecrementNodeValue, Operation.IncrementNodeValue),
+                            position,
+                            operations)
+
+                    optimizedOperations.add(OptimizedOperation.ChangeNodeValue(result.second))
+                    position = result.first
+                }
+                Operation.MovePointerLeft, Operation.MovePointerRight -> {
+                    val result: Pair<Int, Int> =
+                        combineOperations(
+                            Pair(Operation.MovePointerLeft, Operation.MovePointerRight),
+                            position,
+                            operations)
+
+                    optimizedOperations.add(OptimizedOperation.ChangePosition(result.second))
+                    position = result.first
+                }
+                Operation.StartLoop -> {
+                    val loopSegment = optimize(position + 1, operations)
+                    optimizedOperations.add( OptimizedOperation.Loop(loopSegment.second))
+                    position = loopSegment.first
+                }
+                Operation.EndLoop -> return Pair(position, optimizedOperations.toList())
+                Operation.PrintNodeValue -> optimizedOperations.add(OptimizedOperation.PrintNodeValue)
+                Operation.SetNodeValue -> optimizedOperations.add(OptimizedOperation.SetNodeValue)
+            }
+            position++
+        }
+
+        return Pair(position, optimizedOperations.toList())
+    }
+
+    fun combineOperations(relatedOperations: Pair<Operation, Operation>, _startPosition: Int, operations: List<Operation>): Pair<Int, Int> {
         var stepNumber = 0
         var position = _startPosition
 
-        var currentChar = rawSegmentString.getOrNull(position)
-        while ((currentChar != null) and ((currentChar == relatedOperations.first) or (currentChar == relatedOperations.second))) {
-            if (currentChar == relatedOperations.first) {
+        var currentOperation = operations.getOrNull(position)
+        while ((currentOperation != null) and ((currentOperation == relatedOperations.first) or (currentOperation == relatedOperations.second))) {
+            if (currentOperation == relatedOperations.first) {
                 stepNumber--
             } else {
                 stepNumber++
             }
 
-            currentChar = rawSegmentString.getOrNull(++position)
+            position++
+            currentOperation = operations.getOrNull(position)
         }
 
         position--
-        return position to stepNumber
-    }
-
-    fun parseSegmentToOperationList(_startPosition: Int, rawSegmentString: String): Pair<Int, List<Operation>> {
-        val operationList = mutableListOf<Operation>()
-
-        var position = _startPosition
-        while (position < rawSegmentString.length) {
-            when (rawSegmentString[position]) {
-                '-', '+' -> {
-                    val result: Pair<Int, Int> = sumSeriesOfRelatedOperations(Pair('-', '+'), position, rawSegmentString)
-                    operationList.add(Operation.ChangeNodeValue(result.second))
-                    position = result.first
-                }
-                '<', '>' -> {
-                    val result: Pair<Int, Int> = sumSeriesOfRelatedOperations(Pair('<', '>'), position, rawSegmentString)
-                    operationList.add(Operation.ChangePosition(result.second))
-                    position = result.first
-                }
-                '[' -> {
-                    val loopSegment = parseSegmentToOperationList(position + 1, rawSegmentString)
-                    operationList.add(Operation.Loop(loopSegment.second.toList()))
-                    position = loopSegment.first
-                }
-                ']' -> return position to operationList.toList()
-                '.' -> operationList.add(Operation.PrintNodeValue)
-                ',' -> operationList.add(Operation.SetNodeValue)
-            }
-            position++
-        }
-
-        return position to operationList.toList()
+        return Pair(position, stepNumber)
     }
 }
 
@@ -104,6 +139,6 @@ fun main() {
     val brainfuckProgram2 = "<<[<++]just some comments[<[<<><[--+[<+<<<]++.++].],<<<>>"
     val brainfuckProgram3 = ""
 
-    val operationList = Parser().parseStringToOperationList(brainfuckProgram2)
-    operationList?.forEach { println(it) }
+    val operationList = Parser().parseStringToOperationList(brainfuckProgram1)
+    operationList.forEach { println(it) }
 }
