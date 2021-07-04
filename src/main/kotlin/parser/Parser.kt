@@ -20,17 +20,30 @@ class Parser {
 
     fun isValidOperationString(rawOperationString: String): Boolean {
         var loopLevel = 0
-        rawOperationString.forEach {
-            when (it) {
-                '[' -> loopLevel++
-                ']' -> loopLevel--
-            }
-            if (loopLevel < 0) {
-                return false
+        val openLoops = mutableListOf<Pair<Int,Int>>()
+
+        for (currentPosition in 0..rawOperationString.lastIndex) {
+            when (rawOperationString[currentPosition]) {
+                '[' -> {
+                    loopLevel++
+                    openLoops.add(Pair(currentPosition, loopLevel))
+                }
+                ']' -> {
+                    val closed: Boolean = openLoops.removeIf{ it.second == loopLevel}
+                    loopLevel--
+                    if (!closed) {
+                        throw Exception("At Position $currentPosition: Tried to close non-existent loop.")
+                    }
+                }
             }
         }
 
-        return loopLevel == 0
+        if (openLoops.isNotEmpty()) {
+            val openLoop = openLoops.first()
+            throw Exception("At Position ${openLoop.first}: Loop started with '[' but was never closed.")
+        } else {
+            return true
+        }
     }
 
     fun sumSeriesOfRelatedOperations(relatedOperations: Pair<Char, Char>, _startPosition: Int, rawSegmentString: String): Pair<Int, Int> {
@@ -86,15 +99,11 @@ class Parser {
 
 
 fun main() {
-    val brainfuckProgram = ">+-+--[++[-+-] >>>>>>>>>>>>>>>>>>> + >> ]>><-+[+<+]>-"
+    val brainfuckProgram0 = ">+-+--[++[-+-] >>>>>>>>>>>>>>>>>>> + >> ]>><-+[+<+]>-"
     val brainfuckProgram1 = "<<[<++<<<><--+<+<<<]++.++.,<<<>>"
+    val brainfuckProgram2 = "<<[<++]just some comments[<[<<><[--+[<+<<<]++.++].],<<<>>"
+    val brainfuckProgram3 = ""
 
-    val operationList = Parser().parseStringToOperationList(brainfuckProgram1)
-    if (operationList == null) {
-        println("$brainfuckProgram1 \nis not a valid brainfuck program.")
-        println("Check if all loops start with '[' and end with ']'.")
-    } else {
-        println()
-        operationList.forEach { println(it) }
-    }
+    val operationList = Parser().parseStringToOperationList(brainfuckProgram2)
+    operationList?.forEach { println(it) }
 }
