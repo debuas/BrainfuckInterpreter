@@ -1,27 +1,28 @@
 package virtualmachine.util
 
 
+
 class DataNode {
 
     private var Left : DataNode? = null
     private var Right : DataNode? = null
 
-    private var data : Int = 0
+    private var data : UByte = 0u
 
 
     public fun setData(x : Int = 0) {
-        data = x
+        data = x.toUByte()
     }
 
-    public fun getData() : Int{
+    public fun getData() : UByte{
         return data
     }
 
     public fun incrementData(x : Int = 1) {
-        data += x
+        data = ((data + x.toUInt()) % UByte.MAX_VALUE).toUByte()
     }
-    public fun decrement(x : Int = 1) {
-        data -= x
+    public fun decrementData(x : Int = 1) {
+        data = ((data - x.toUInt()) % UByte.MAX_VALUE).toUByte()
     }
 
     public fun setLeft(){

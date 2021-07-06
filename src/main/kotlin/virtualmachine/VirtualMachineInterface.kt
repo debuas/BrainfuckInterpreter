@@ -14,9 +14,10 @@ interface VirtualMachineInterface {
 
     fun readChar()
 
-    fun loop(function : Unit)
+    fun loop(function : () -> Unit)
 
-    fun getValue() : Int?
+    fun getValue() : UByte?
+
 
 
 
