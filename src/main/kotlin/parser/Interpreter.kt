@@ -1,20 +1,19 @@
 package parser
 
-import com.sun.tools.attach.VirtualMachine
 import virtualmachine.VirtualMachineInterface
 import virtualmachine.Virtualmachine
 import java.io.File
-import java.nio.ByteBuffer
 
 
 class Interpreter {
 
-    val vm : VirtualMachineInterface
+    val vm: VirtualMachineInterface
 
     init {
         @ExperimentalUnsignedTypes
         this.vm = Virtualmachine()
     }
+
     /**
      * Interpreter using optimized Operations
      * @param ops List containing an Operations to be executed by the VM
@@ -29,14 +28,14 @@ class Interpreter {
 
                 is OptimizedOperation.ChangeNodeValue -> {
                     if (it.amount > 0) this.vm.incrementPointer(it.amount)
-                    else if (it.amount < 0) this.vm.decrementPointer(it.amount*-1)
+                    else if (it.amount < 0) this.vm.decrementPointer(it.amount * -1)
                 }
                 is OptimizedOperation.ChangePosition -> {
                     if (it.steps > 0) this.vm.movePointerRight(it.steps)
-                    else if (it.steps < 0) this.vm.movePointerLeft(it.steps*-1)
+                    else if (it.steps < 0) this.vm.movePointerLeft(it.steps * -1)
                 }
                 is OptimizedOperation.Loop -> {
-                    this.vm.loop({ this.runOptimizedOperations(it.operationList) } )
+                    this.vm.loop({ this.runOptimizedOperations(it.operationList) })
                 }
                 is OptimizedOperation.PrintNodeValue -> {
                     this.vm.printChar()
@@ -49,4 +48,55 @@ class Interpreter {
 
         }
     }
+
+
+    fun runNoOptimized(ops: List<StructuredOperation>) {
+
+
+        if (ops == null) return
+
+        ops.forEach {
+
+            when (it) {
+
+                is StructuredOperation.IncrementNodeValue -> {
+                    this.vm.incrementPointer()
+                }
+                is StructuredOperation.DecrementNodeValue -> {
+                    this.vm.decrementPointer()
+                }
+                is StructuredOperation.MovePointerLeft -> {
+                    this.vm.movePointerLeft()
+                }
+                is StructuredOperation.MovePointerRight -> {
+                    this.vm.movePointerRight()
+                }
+                is StructuredOperation.SetNodeValue -> {
+                    this.vm.readChar()
+                }
+                is StructuredOperation.PrintNodeValue -> {
+                    this.vm.printChar()
+                }
+                is StructuredOperation.Loop -> {
+                   this.vm.loop { this.runNoOptimized(it.operationList) }
+                }
+            }
+
+        }
+
+    }
+
+
+    fun runOperation(ops: Operation) {
+
+    }
+
+    fun runOperation(file: File) {
+
+        file.reader().readText()
+
+
+    }
+
+
 }

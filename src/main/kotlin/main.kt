@@ -28,8 +28,12 @@ fun runAsStringParam(data : String) {
 
     val interpreter = Interpreter()
 
-    interpreter.runOptimizedOperations(
-        Parser().parseStringToOperationList(data)
+    //println("Size : ${data.length} Chars")
+    //interpreter.runOptimizedOperations(
+    //    Parser().parseStringToOperationList(data)
+    //)
+    interpreter.runNoOptimized(
+        Parser().parse(data)
     )
 }
 
@@ -38,7 +42,7 @@ fun runAsStringParam(data : String) {
 
 
 fun runAsFileParam(data: String) {
-    println("FileString : $data")
+    //println("FileString : $data")
 
     val file = File(data)
 
