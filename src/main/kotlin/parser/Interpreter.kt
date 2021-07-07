@@ -1,10 +1,8 @@
 package parser
 
-import com.sun.tools.attach.VirtualMachine
 import virtualmachine.VirtualMachineInterface
 import virtualmachine.Virtualmachine
 import java.io.File
-import java.nio.ByteBuffer
 
 
 class Interpreter {
@@ -52,7 +50,7 @@ class Interpreter {
     }
 
 
-    fun runNoOptimized(ops: List<Operation2>) {
+    fun runNoOptimized(ops: List<StructuredOperation>) {
 
 
         if (ops == null) return
@@ -61,25 +59,25 @@ class Interpreter {
 
             when (it) {
 
-                is Operation2.IncrementNodeValue -> {
+                is StructuredOperation.IncrementNodeValue -> {
                     this.vm.incrementPointer()
                 }
-                is Operation2.DecrementNodeValue -> {
+                is StructuredOperation.DecrementNodeValue -> {
                     this.vm.decrementPointer()
                 }
-                is Operation2.MovePointerLeft -> {
+                is StructuredOperation.MovePointerLeft -> {
                     this.vm.movePointerLeft()
                 }
-                is Operation2.MovePointerRight -> {
+                is StructuredOperation.MovePointerRight -> {
                     this.vm.movePointerRight()
                 }
-                is Operation2.SetNodeValue -> {
+                is StructuredOperation.SetNodeValue -> {
                     this.vm.readChar()
                 }
-                is Operation2.PrintNodeValue -> {
+                is StructuredOperation.PrintNodeValue -> {
                     this.vm.printChar()
                 }
-                is Operation2.Loop -> {
+                is StructuredOperation.Loop -> {
                    this.vm.loop { this.runNoOptimized(it.operationList) }
                 }
             }

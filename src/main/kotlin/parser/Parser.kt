@@ -11,6 +11,16 @@ sealed class Operation {
     object SetNodeValue : Operation()
 }
 
+sealed class StructuredOperation {
+    object DecrementNodeValue : StructuredOperation()
+    object IncrementNodeValue : StructuredOperation()
+    object MovePointerLeft: StructuredOperation()
+    object MovePointerRight: StructuredOperation()
+    object PrintNodeValue : StructuredOperation()
+    object SetNodeValue : StructuredOperation()
+    data class Loop(val operationList: List<StructuredOperation>): StructuredOperation()
+}
+
 sealed class OptimizedOperation {
     data class ChangeNodeValue(val amount: Int) : OptimizedOperation()
     data class ChangePosition(val steps: Int) : OptimizedOperation()
@@ -19,23 +29,13 @@ sealed class OptimizedOperation {
     object SetNodeValue : OptimizedOperation()
 }
 
-sealed class Operation2 {
-    object DecrementNodeValue : Operation2()
-    object IncrementNodeValue : Operation2()
-    object MovePointerLeft: Operation2()
-    object MovePointerRight: Operation2()
-    object PrintNodeValue : Operation2()
-    object SetNodeValue : Operation2()
-    data class Loop(val operationList: List<Operation2>): Operation2()
-}
-
 class Parser {
 
-    fun parseStringToOperationList(rawOperationString: String): List<OptimizedOperation> {
+    fun parse(rawOperationString: String): List<StructuredOperation> {
         validate(rawOperationString)
 
         val operations: List<Operation> = lexer(rawOperationString)
-        return optimize(0, operations).second
+        return structureLoops(0, operations).second
     }
 
     fun validate(rawOperationString: String) {
@@ -78,6 +78,30 @@ class Parser {
                 else -> null
             }
         }
+    }
+
+    fun structureLoops(_startPosition: Int, operations: List<Operation>): Pair<Int,List<StructuredOperation>> {
+        val structuredOperations = mutableListOf<StructuredOperation>()
+
+        var position = _startPosition
+        while (position <= operations.lastIndex) {
+            when (operations[position]) {
+                Operation.DecrementNodeValue -> structuredOperations.add(StructuredOperation.DecrementNodeValue)
+                Operation.IncrementNodeValue -> structuredOperations.add(StructuredOperation.IncrementNodeValue)
+                Operation.MovePointerLeft -> structuredOperations.add(StructuredOperation.MovePointerLeft)
+                Operation.MovePointerRight -> structuredOperations.add(StructuredOperation.MovePointerRight)
+                Operation.PrintNodeValue -> structuredOperations.add(StructuredOperation.PrintNodeValue)
+                Operation.SetNodeValue -> structuredOperations.add(StructuredOperation.SetNodeValue)
+                Operation.StartLoop -> {
+                    val loopSegment = structureLoops(position + 1, operations )
+                    structuredOperations.add(StructuredOperation.Loop(loopSegment.second))
+                    position = loopSegment.first
+                }
+                Operation.EndLoop -> return Pair(position, structuredOperations.toList())
+            }
+            position++
+        }
+        return Pair(position, structuredOperations.toList())
     }
 
     fun optimize(_startPosition: Int, operations: List<Operation>): Pair<Int, List<OptimizedOperation>> {
@@ -140,35 +164,6 @@ class Parser {
         position--
         return Pair(position, stepNumber)
     }
-
-    fun parse2(rawOperationString: String): List<Operation2> {
-        validate(rawOperationString)
-        return lexer2(0, rawOperationString).second
-    }
-
-    fun lexer2(_startPosition: Int, rawOperationString: String): Pair<Int,List<Operation2>> {
-        val operations = mutableListOf<Operation2>()
-
-        var position = _startPosition
-        while (position < rawOperationString.lastIndex) {
-            when (rawOperationString[position]) {
-                '-' -> operations.add(Operation2.DecrementNodeValue)
-                '+' -> operations.add(Operation2.IncrementNodeValue)
-                '<' -> operations.add(Operation2.MovePointerLeft)
-                '>' -> operations.add(Operation2.MovePointerRight)
-                '.' -> operations.add(Operation2.PrintNodeValue)
-                ',' -> operations.add(Operation2.SetNodeValue)
-                '[' -> {
-                    val loopSegment = lexer2(position + 1, rawOperationString )
-                    operations.add(Operation2.Loop(loopSegment.second))
-                    position = loopSegment.first
-                }
-                ']' -> return Pair(position, operations.toList())
-            }
-            position++
-        }
-        return Pair(position, operations.toList())
-    }
 }
 
 
@@ -178,7 +173,6 @@ fun main() {
     val brainfuckProgram2 = "<<[<++]just[ [some ]comments[<[<<><[--+[<+<<<]++.++].],<<<>>"
     val brainfuckProgram3 = ""
 
-    // val operationList = Parser().parseStringToOperationList(brainfuckProgram1)
-    val operationList = Parser().parse2(brainfuckProgram0)
+    val operationList = Parser().parse(brainfuckProgram0)
     operationList.forEach { println(it) }
 }

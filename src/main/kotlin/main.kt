@@ -33,7 +33,7 @@ fun runAsStringParam(data : String) {
     //    Parser().parseStringToOperationList(data)
     //)
     interpreter.runNoOptimized(
-        Parser().parse2(data)
+        Parser().parse(data)
     )
 }
 
