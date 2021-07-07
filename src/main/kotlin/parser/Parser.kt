@@ -55,17 +55,17 @@ class Parser {
     }
 
     fun lexer(rawOperationString: String): List<Operation> {
-        return rawOperationString.fold( listOf<Operation>() ) { operationList, currentChar ->
+        return rawOperationString.mapNotNull { currentChar ->
             when (currentChar) {
-                '-' -> operationList.plus(Operation.DecrementNodeValue)
-                '+' -> operationList.plus(Operation.IncrementNodeValue)
-                '<' -> operationList.plus(Operation.MovePointerLeft)
-                '>' -> operationList.plus(Operation.MovePointerRight)
-                '[' -> operationList.plus(Operation.StartLoop)
-                ']' -> operationList.plus(Operation.EndLoop)
-                '.' -> operationList.plus(Operation.PrintNodeValue)
-                ';' -> operationList.plus(Operation.SetNodeValue)
-                else -> operationList
+                '-' -> Operation.DecrementNodeValue
+                '+' -> Operation.IncrementNodeValue
+                '<' -> Operation.MovePointerLeft
+                '>' -> Operation.MovePointerRight
+                '[' -> Operation.StartLoop
+                ']' -> Operation.EndLoop
+                '.' -> Operation.PrintNodeValue
+                ',' -> Operation.SetNodeValue
+                else -> null
             }
         }
     }
@@ -136,7 +136,7 @@ class Parser {
 fun main() {
     val brainfuckProgram0 = ">+-+--[++[-+-] >>>>>>>>>>>>>>>>>>> + >> ]>><-+[+<+]>-"
     val brainfuckProgram1 = "<<[<++<<<><--+<+<<<]++.++.,<<<>>"
-    val brainfuckProgram2 = "<<[<++]just some comments[<[<<><[--+[<+<<<]++.++].],<<<>>"
+    val brainfuckProgram2 = "<<[<++]just[ [some ]comments[<[<<><[--+[<+<<<]++.++].],<<<>>"
     val brainfuckProgram3 = ""
 
     val operationList = Parser().parseStringToOperationList(brainfuckProgram1)
