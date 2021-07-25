@@ -15,12 +15,7 @@ interface VirtualMachineInterface {
     fun readChar()
 
     fun loop(function : () -> Unit)
-
+    @kotlin.ExperimentalUnsignedTypes
     fun getValue() : UByte?
-
-
-
-
-
 
 }

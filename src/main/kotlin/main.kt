@@ -1,4 +1,6 @@
 import parser.Interpreter
+import parser.Operation
+import parser.OptimizedOperation
 import parser.Parser
 import java.io.File
 import kotlin.io.*
@@ -7,9 +9,19 @@ import kotlin.io.*
 private enum class Command (val command : Array<String>, val commandparam : String, val description : String ){
     help    ( arrayOf("-h" , "-help" , "-?") , "" , "List Of All Commands and Options\n" ),
     file    ( arrayOf("-f" , "-F" , "-File") ,"<File>", "Use a File as Input "),
-    string     ( arrayOf("-s") , "<String>" , "Pass a String as Input" );
-
+    string  ( arrayOf("-s") , "<String>" , "Pass a String as Input" ),
+    optimized ( arrayOf("-o"), "" , "Run in optimized Mode ");
 }
+
+enum class Mode {
+    Optimized ,
+    Unoptimized,
+    Stringmode,
+    Filemode
+}
+
+
+
 
 val fileending  = arrayOf("b" , "bf")
 
@@ -23,26 +35,32 @@ fun printHelpContext() {
     }
 }
 
-fun runAsStringParam(data : String) {
-    //println("DataString : $data")
+fun runAsStringParam(data : String , mode : Mode) {
+
 
     val interpreter = Interpreter()
+    when (mode) {
+        Mode.Unoptimized -> {
+            interpreter.runNoOptimized(
+                Parser().parse(data)
+            )
+        }
+        Mode. Optimized -> {
+            interpreter.runOptimizedOperations(
+                run {
+                val p = Parser()
+                p.validate(data)
+                p.optimize(0, p.lexer(data)).second
+                })
+            }
 
-    //println("Size : ${data.length} Chars")
-    //interpreter.runOptimizedOperations(
-    //    Parser().parseStringToOperationList(data)
-    //)
-    interpreter.runNoOptimized(
-        Parser().parse(data)
-    )
-}
+        else -> {}
+        }
+    }
 
 
 
-
-
-fun runAsFileParam(data: String) {
-    //println("FileString : $data")
+fun runAsFileParam(data: String , mode : Mode) {
 
     val file = File(data)
 
@@ -50,8 +68,7 @@ fun runAsFileParam(data: String) {
         if (file.isFile) {
             if (file.extension in arrayOf("b" , "bf")) {
                 file.reader().toString()
-                //println("Filedata:${String(file.inputStream().readAllBytes())}")
-                runAsStringParam(String(file.inputStream().readAllBytes()))
+                runAsStringParam(String(file.inputStream().readAllBytes()),mode)
 
             } else println("Wrong file Type.")
         } else println("$data not a file")
@@ -67,30 +84,53 @@ fun main(args: Array<String>) {
 
     val arg = args.iterator()
 
+    var config : Pair<MutableList<Mode>, String>? = null
+
+    val tmplist = mutableListOf<Mode>()
+
     while (arg.hasNext()) {
 
-
-
-
         when (arg.next()) {
+
+            in Command.optimized.command -> {
+                tmplist.add(Mode.Optimized)
+            }
 
             in Command.help.command -> {
                 printHelpContext()
                 return
             }
             in Command.string.command -> {
-                if (arg.hasNext()) runAsStringParam(arg.next())
-                return
+                if (arg.hasNext()) {
+                    tmplist.add(Mode.Stringmode)
+                    if(!tmplist.contains(Mode.Optimized)) tmplist.add(Mode.Unoptimized)
+                    config = Pair(tmplist, arg.next())
+                    break
+                }
+
             }
             in Command.file.command -> {
-                if(arg.hasNext()) runAsFileParam(arg.next())
-                return
+                if(arg.hasNext()) {
+                    tmplist.add(Mode.Filemode)
+                    if(!tmplist.contains(Mode.Optimized)) tmplist.add(Mode.Unoptimized)
+                    config = Pair(tmplist, arg.next())
+                    break
+                }
             }
 
-
+        }
+    }
+        if (config != null) {
+            if (config.first.contains(Mode.Stringmode)) {
+                if (config.first.contains(Mode.Optimized)) runAsStringParam(config.second, Mode.Optimized)
+                else if (config.first.contains(Mode.Unoptimized)) runAsStringParam(config.second, Mode.Unoptimized)
+            } else if (config.first.contains(Mode.Filemode)) {
+                if (config.first.contains(Mode.Optimized)) runAsFileParam(config.second, Mode.Optimized)
+                else if (config.first.contains(Mode.Unoptimized)) runAsFileParam(config.second, Mode.Unoptimized)
+            }
         }
 
-    }
+
 }
 
 
