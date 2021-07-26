@@ -5,6 +5,7 @@ import virtualmachine.Virtualmachine
 import java.io.File
 import java.io.InputStream
 import java.io.Reader
+import java.lang.Exception
 import kotlin.time.measureTime
 
 
@@ -91,79 +92,32 @@ class Interpreter {
 
 
     fun runtime() {
+        println("Running in Runtime Mode. Type '?' to get the decimal value of the current cell. Type 'exit' to leave.")
 
-
-        var buffer : String? = ""
-        var level = 0
-
-        var loopbuffer  = ""
-
-        println("Running in RunTime Mode. Type 'exit' to leave .")
-        println("To get the current Cell numerical value type '?'.")
-
+        val parser = Parser()
         while (true) {
-            if (buffer == null) println()
-            for (i in 0..level ) {
-                print(">")
-            }
-            print(" ")
-            buffer = readLine()
+            println()
+            print(">> ")
 
-
-
+            val buffer = readLine()
             if (buffer == null) {
+                println("Please enter your commands.")
                 continue
             }
-
             if (buffer == "exit") {
                 return
             }
+            if (buffer == "?") {
+                println(this.vm.getValue())
+                continue
+            }
 
-            buffer.forEach {
-                    when (it) {
-                        '+' -> {
-                            if (level == 0) this.vm.incrementPointer() else loopbuffer += it
-                        }
-                        '-' -> {
-                            if (level == 0) this.vm.decrementPointer() else loopbuffer += it
-                        }
-                        '<' -> {
-                            if (level == 0) this.vm.movePointerLeft() else loopbuffer += it
-                        }
-                        '>' -> {
-                            if (level == 0) this.vm.movePointerRight() else loopbuffer += it
-                        }
-                        '.' -> {
-                            if (level == 0) this.vm.printChar() else loopbuffer += it
-                        }
-                        ',' -> {
-                            if (level == 0) this.vm.readChar() else loopbuffer += it
-                        }
-                        '[' -> {
-                            level++
-                            loopbuffer += it
-                        }
-                        ']' -> {
-                            if (level == 0) {
-                                println("Syntax Error")
-
-                            }else {
-                                level--
-                                loopbuffer += it
-                                if (level == 0) {
-                                    run { this.runNoOptimized(Parser().parse("+-" + loopbuffer)) }
-                                    loopbuffer = ""
-                                }
-                            }
-                        }
-                        '?' -> println(this.vm.getValue())
-                    }
-
-
-
+            try {
+                runNoOptimized(parser.parse(buffer))
+            } catch (e: Exception) {
+                println(e.message)
+                continue
             }
         }
     }
-
-
 }
