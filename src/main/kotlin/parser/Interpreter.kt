@@ -3,6 +3,9 @@ package parser
 import virtualmachine.VirtualMachineInterface
 import virtualmachine.Virtualmachine
 import java.io.File
+import java.io.InputStream
+import java.io.Reader
+import kotlin.time.measureTime
 
 
 class Interpreter {
@@ -87,15 +90,79 @@ class Interpreter {
     }
 
 
-    fun runOperation(ops: Operation) {
-
-    }
-
-    fun runOperation(file: File) {
-
-        file.reader().readText()
+    fun runtime() {
 
 
+        var buffer : String? = ""
+        var level = 0
+
+        var loopbuffer  = ""
+
+        println("Running in RunTime Mode. Type 'exit' to leave .")
+        println("To get the current Cell numerical value type '?'.")
+
+        while (true) {
+            if (buffer == null) println()
+            for (i in 0..level ) {
+                print(">")
+            }
+            print(" ")
+            buffer = readLine()
+
+
+
+            if (buffer == null) {
+                continue
+            }
+
+            if (buffer == "exit") {
+                return
+            }
+
+            buffer.forEach {
+                    when (it) {
+                        '+' -> {
+                            if (level == 0) this.vm.incrementPointer() else loopbuffer += it
+                        }
+                        '-' -> {
+                            if (level == 0) this.vm.decrementPointer() else loopbuffer += it
+                        }
+                        '<' -> {
+                            if (level == 0) this.vm.movePointerLeft() else loopbuffer += it
+                        }
+                        '>' -> {
+                            if (level == 0) this.vm.movePointerRight() else loopbuffer += it
+                        }
+                        '.' -> {
+                            if (level == 0) this.vm.printChar() else loopbuffer += it
+                        }
+                        ',' -> {
+                            if (level == 0) this.vm.readChar() else loopbuffer += it
+                        }
+                        '[' -> {
+                            level++
+                            loopbuffer += it
+                        }
+                        ']' -> {
+                            if (level == 0) {
+                                println("Syntax Error")
+
+                            }else {
+                                level--
+                                loopbuffer += it
+                                if (level == 0) {
+                                    run { this.runNoOptimized(Parser().parse("+-" + loopbuffer)) }
+                                    loopbuffer = ""
+                                }
+                            }
+                        }
+                        '?' -> println(this.vm.getValue())
+                    }
+
+
+
+            }
+        }
     }
 
 

@@ -10,7 +10,8 @@ private enum class Command (val command : Array<String>, val commandparam : Stri
     help    ( arrayOf("-h" , "-help" , "-?") , "" , "List Of All Commands and Options\n" ),
     file    ( arrayOf("-f" , "-F" , "-File") ,"<File>", "Use a File as Input "),
     string  ( arrayOf("-s") , "<String>" , "Pass a String as Input" ),
-    optimized ( arrayOf("-o"), "" , "Run in optimized Mode ");
+    optimized ( arrayOf("-o"), "" , "Run in optimized Mode "),
+    runtime ( arrayOf("-r"), "", "Start Runtime Mode");
 }
 
 enum class Mode {
@@ -100,6 +101,11 @@ fun main(args: Array<String>) {
                 printHelpContext()
                 return
             }
+            in Command.runtime.command -> {
+                Interpreter().runtime()
+                return
+            }
+
             in Command.string.command -> {
                 if (arg.hasNext()) {
                     tmplist.add(Mode.Stringmode)
