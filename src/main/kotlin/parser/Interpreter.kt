@@ -18,9 +18,9 @@ class Interpreter {
      * Interpreter using optimized Operations
      * @param ops List containing an Operations to be executed by the VM
      * */
-    fun runOptimizedOperations(ops: List<OptimizedOperation>?) {
+    fun runOptimizedOperations(ops: List<OptimizedOperation>) {
 
-        if (ops == null) return
+
 
         ops.forEach {
 
@@ -53,7 +53,7 @@ class Interpreter {
     fun runNoOptimized(ops: List<StructuredOperation>) {
 
 
-        if (ops == null) return
+
 
         ops.forEach {
 
